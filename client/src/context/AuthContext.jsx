@@ -1,7 +1,7 @@
 import { createContext, useState, useEffect } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
-import { io } from "socket.io-client";
+
 
 const backendUrl = import.meta.env.VITE_BACKEND_URL;
 axios.defaults.baseURL = backendUrl;
@@ -81,7 +81,7 @@ const checkAuth = async () => {
     setOnlineUsers([]);
     axios.defaults.headers.common["token"] = null;
     toast.success("Logged out successfully");
-    socket?.disconnect();
+    // Socket.io disabled
     window.location.reload(); // <-- Add this line
   };
 
@@ -119,33 +119,10 @@ const updateProfile = async (body) => {
 
   
 
-  // connect socket function to handle socket connection and online users update
+  // Socket.io disabled for serverless deployment
   const connectSocket = (userData) => {
-    if (!userData) {
-      console.log("connectSocket: no userData, skipping socket connection");
-      return;
-    }
-    if (socket?.connected) {
-      console.log("connectSocket: socket already connected", socket.id);
-      return;
-    }
-
-    console.log("connectSocket: creating socket for user:", userData._id);
-    const newSocket = io(backendUrl, {
-      query: { userId: userData._id }
-    });
-
-    setSocket(newSocket);
-
-    newSocket.on("getOnlineUsers", (userIds) => {
-      console.log("getOnlineUsers received:", userIds);
-      setOnlineUsers(userIds);
-    });
-
-    newSocket.on("connect", () => {
-      console.log("Socket connected:", newSocket.id, "for user:", userData._id);
-    });
-  }
+    console.log("Socket.io disabled for serverless deployment");
+  };
 
   useEffect(() => {
     if (token) {

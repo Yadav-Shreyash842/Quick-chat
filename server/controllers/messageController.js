@@ -1,7 +1,9 @@
 import Message from "../models/Message.js";
 import User from "../models/User.js";
 import cloudinary from "../lib/cloudinary.js";
-import { io , userSocketMap} from "../server.js";
+// Mock socket.io for serverless
+const io = { emit: () => {}, to: () => ({ emit: () => {} }) };
+const userSocketMap = {};
 
 // get all user except logged in user
 export const getUserForSidebar = async (req, res) => {
@@ -109,16 +111,7 @@ export const sendMessage = async (req, res) => {
             delivered: true
         });
 
-        // emit message using socket.io
-        const recvrSocketId = userSocketMap[recvrId];
-        if(recvrSocketId){
-            console.log("Emitting newMessage event:", newMessage);
-            console.log("Recipient socket ID:", recvrSocketId);
-            io.to(recvrSocketId).emit("newMessage", newMessage);
-        }
-
-        console.log("Recipient user ID:", recvrId);
-        console.log("Sender user ID:", sendrId);
+        // Socket.io disabled for serverless deployment
 
 
         res.json({success:true, newMessage});
@@ -160,27 +153,7 @@ export const reactToMessage = async (req, res) => {
         
         await message.save();
         
-        // Emit reaction update to all connected users in the conversation
-        const recvrSocketId = userSocketMap[message.recvrId?.toString()];
-        const senderSocketId = userSocketMap[message.sendrId?.toString()];
-        
-        const reactionData = { messageId: id, reactions: message.reactions };
-        
-        // Emit to receiver
-        if (recvrSocketId) {
-            io.to(recvrSocketId).emit("messageReaction", reactionData);
-        }
-        
-        // Emit to sender (if different from receiver)
-        if (senderSocketId && senderSocketId !== recvrSocketId) {
-            io.to(senderSocketId).emit("messageReaction", reactionData);
-        }
-        
-        // Also emit to the user who reacted (for immediate feedback)
-        const reactorSocketId = userSocketMap[userId.toString()];
-        if (reactorSocketId && reactorSocketId !== recvrSocketId && reactorSocketId !== senderSocketId) {
-            io.to(reactorSocketId).emit("messageReaction", reactionData);
-        }
+        // Socket.io disabled for serverless deployment
         
         res.json({ success: true, reactions: message.reactions });
     } catch (error) {
@@ -205,16 +178,7 @@ export const editMessage = async (req, res) => {
         message.edited = true;
         await message.save();
         
-        // Emit edit update
-        const recvrSocketId = userSocketMap[message.recvrId?.toString()];
-        const senderSocketId = userSocketMap[message.sendrId?.toString()];
-        
-        if (recvrSocketId) {
-            io.to(recvrSocketId).emit("messageEdited", message);
-        }
-        if (senderSocketId && senderSocketId !== recvrSocketId) {
-            io.to(senderSocketId).emit("messageEdited", message);
-        }
+        // Socket.io disabled for serverless deployment
         
         res.json({ success: true, message });
     } catch (error) {
@@ -237,16 +201,7 @@ export const deleteMessage = async (req, res) => {
         if (deleteFor === 'everyone') {
             await Message.findByIdAndDelete(id);
             
-            // Emit delete update
-            const recvrSocketId = userSocketMap[message.recvrId?.toString()];
-            const senderSocketId = userSocketMap[message.sendrId?.toString()];
-            
-            if (recvrSocketId) {
-                io.to(recvrSocketId).emit("messageDeleted", { messageId: id });
-            }
-            if (senderSocketId && senderSocketId !== recvrSocketId) {
-                io.to(senderSocketId).emit("messageDeleted", { messageId: id });
-            }
+            // Socket.io disabled for serverless deployment
         }
         
         res.json({ success: true });
